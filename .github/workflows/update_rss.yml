@@ -9,7 +9,14 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Test network connectivity
+        run: ping -c 4 google.com # التحقق من الاتصال بالإنترنت
+      - name: Fix DNS
+        run: echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf # إصلاح مشكلات DNS      
+      - name: Update package lists
+        run: sudo apt-get update --fix-missing # تحديث المستودعات مع تجاهل الأخطاء البسيطة
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
