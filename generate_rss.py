@@ -3,32 +3,36 @@ from bs4 import BeautifulSoup
 import re
 from xml.etree import ElementTree as ET
 
-# معايير البحث (يمكنك تغييرها حسب رغبتك)
-search_term = "daredevil born again"  # اكتب ما تبحث عنه
-quality = "1080p"            # الجودة المطلوبة
-encoding = "x265"            # نوع الترميز
+# تحديد معايير البحث
+show_name = "Daredevil Born Again"  # اسم المسلسل
+season = "01"                       # رقم الموسم
+episode = "04"                      # رقم الحلقة
+quality = "1080p"                   # الجودة
+encoding = "x265"                   # الترميز
+team = "MeGusta"                    # اسم الفريق
 
-# رابط صفحة البحث
-url = f"https://uindex.org/search.php?search={search_term}"
+# بناء نمط البحث باستخدام تعبير منتظم
+pattern = rf"{re.escape(show_name)}\s+S{season}E{episode}\s+{quality}\s+.*{encoding}.* -{team}"
+
+# رابط صفحة البحث (يجب تعديله حسب الموقع المستخدم)
+url = "https://uindex.org/search.php?search=" + show_name.replace(" ", "+")
 
 # تحميل الصفحة
-headers = {"User-Agent": "Mozilla/5.0"}  # لتجنب حظر الموقع
+headers = {"User-Agent": "Mozilla/5.0"}
 response = requests.get(url, headers=headers)
 soup = BeautifulSoup(response.text, 'html.parser')
 
-# استخراج النتائج (قد تحتاج لتعديل هذا السطر حسب بنية الموقع)
+# استخراج النتائج (يجب تعديل هذا السطر حسب بنية الموقع)
 results = soup.find_all('div', class_='search-result')  # افتراضي
 
-# إنشاء ملف RSS
+# إنشاء هيكل ملف RSS
 rss = ET.Element("rss", version="2.0")
 channel = ET.SubElement(rss, "channel")
-ET.SubElement(channel, "title").text = f"نتائج البحث: {search_term}"
+ET.SubElement(channel, "title").text = f"{show_name} S{season}E{episode} {quality} RSS"
 ET.SubElement(channel, "link").text = url
-ET.SubElement(channel, "description").text = f"RSS لـ {search_term} بجودة {quality}"
+ET.SubElement(channel, "description").text = f"RSS feed for {show_name} S{season}E{episode}"
 
-# تصفية النتائج باستخدام تعبير منتظم
-pattern = rf".*{quality}.*{encoding}.*"
-
+# تصفية النتائج وإضافتها إلى RSS
 for result in results:
     title_tag = result.find('h2') or result.find('a')  # استخراج العنوان
     if title_tag and re.search(pattern, title_tag.text, re.IGNORECASE):
