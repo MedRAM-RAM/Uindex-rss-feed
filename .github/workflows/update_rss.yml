@@ -1,0 +1,29 @@
+name: تحديث RSS
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'  # يعمل كل ساعة
+  workflow_dispatch:  # يسمح بالتشغيل يدويًا
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: إعداد Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+    - name: تثبيت المكتبات
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests beautifulsoup4
+    - name: تشغيل السكربت
+      run: python generate_rss.py
+    - name: رفع التغييرات
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add search_rss.xml
+        git commit -m "تحديث RSS" || echo "لا تغييرات"
+        git push
