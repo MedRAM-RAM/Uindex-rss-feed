@@ -1,4 +1,4 @@
-name: تحديث RSS
+name: Update RSS
 
 on:
   schedule:
@@ -10,20 +10,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: إعداد Python
+    - name: set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.x'
-    - name: تثبيت المكتبات
+    - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install requests beautifulsoup4
-    - name: تشغيل السكربت
+    - name: Run script
       run: python generate_rss.py
-    - name: رفع التغييرات
+    - name: Commit changes
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add search_rss.xml
-        git commit -m "تحديث RSS" || echo "لا تغييرات"
+        git commit -m "Update RSS" || echo "No changes"
         git push
