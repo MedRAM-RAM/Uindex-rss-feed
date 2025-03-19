@@ -7,9 +7,9 @@ from xml.etree import ElementTree as ET
 show_name = "Daredevil Born Again"  # اسم المسلسل
 season = "01"                       # رقم الموسم
 episode = "04"                      # رقم الحلقة
-quality = "1080p"                   # الجودة
-encoding = "x265"                   # الترميز
-team = "MeGusta"                    # اسم الفريق
+quality = ""                   # الجودة
+encoding = ""                   # الترميز
+team = ""                    # اسم الفريق
 
 # بناء نمط البحث باستخدام تعبير منتظم
 pattern = rf"{re.escape(show_name)}\s+S{season}E{episode}\s+{quality}\s+.*{encoding}.* -{team}"
