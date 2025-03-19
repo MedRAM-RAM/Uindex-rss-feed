@@ -2,48 +2,56 @@ import requests
 from bs4 import BeautifulSoup
 import re
 from xml.etree import ElementTree as ET
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
-# تحديد معايير البحث
-show_name = "Daredevil Born Again"  # اسم المسلسل
-season = "01"                       # رقم الموسم
-episode = "04"                      # رقم الحلقة
-quality = ""                   # الجودة
-encoding = ""                   # الترميز
-team = ""                    # اسم الفريق
+# إعداد المتصفح لـ selenium
+chrome_options = Options()
+chrome_options.add_argument("--headless")  # تشغيل بدون واجهة
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+driver = webdriver.Chrome(options=chrome_options)
 
-# بناء نمط البحث باستخدام تعبير منتظم
-pattern = rf"{re.escape(show_name)}\s+S{season}E{episode}\s+{quality}\s+.*{encoding}.* -{team}"
+# رابط صفحة البحث (استبدله برابطك الفعلي)
+url = "https://uindex.org/search.php?search=Daredevil+Born+Again"
+driver.get(url)
 
-# رابط صفحة البحث (يجب تعديله حسب الموقع المستخدم)
-url = "https://uindex.org/search.php?search=" + show_name.replace(" ", "+")
+# انتظر تحميل المحتوى (اضبط الوقت حسب الحاجة)
+driver.implicitly_wait(10)
 
-# تحميل الصفحة
-headers = {"User-Agent": "Mozilla/5.0"}
-response = requests.get(url, headers=headers)
-soup = BeautifulSoup(response.text, 'html.parser')
+# استخراج مصدر الصفحة بعد تحميل JavaScript
+soup = BeautifulSoup(driver.page_source, 'html.parser')
+driver.quit()
 
-# استخراج النتائج (يجب تعديل هذا السطر حسب بنية الموقع)
-results = soup.find_all('div', class_='search-result')  # افتراضي
+# البحث عن <div id="content">
+content = soup.find('div', id='content')
 
-# إنشاء هيكل ملف RSS
-rss = ET.Element("rss", version="2.0")
-channel = ET.SubElement(rss, "channel")
-ET.SubElement(channel, "title").text = f"{show_name} S{season}E{episode} {quality} RSS"
-ET.SubElement(channel, "link").text = url
-ET.SubElement(channel, "description").text = f"RSS feed for {show_name} S{season}E{episode}"
+if content:
+    # استخراج النتائج (اضبط هذا السطر حسب بنية الموقع)
+    results = content.find_all('div', class_='result')  # افتراضي، قد تحتاج لتغييره
 
-# تصفية النتائج وإضافتها إلى RSS
-for result in results:
-    title_tag = result.find('h2') or result.find('a')  # استخراج العنوان
-    if title_tag and re.search(pattern, title_tag.text, re.IGNORECASE):
-        item = ET.SubElement(channel, "item")
-        ET.SubElement(item, "title").text = title_tag.text.strip()
-        
-        # استخراج رابط التورنت أو المغناطيسي
-        link = result.find('a', href=re.compile(r'\.torrent$')) or result.find('a', href=re.compile(r'^magnet:'))
-        ET.SubElement(item, "link").text = link['href'] if link else url
-        ET.SubElement(item, "description").text = "رابط متاح"
+    # إنشاء هيكل ملف RSS
+    rss = ET.Element("rss", version="2.0")
+    channel = ET.SubElement(rss, "channel")
+    ET.SubElement(channel, "title").text = "خلاصة RSS من البحث"
+    ET.SubElement(channel, "link").text = url
+    ET.SubElement(channel, "description").text = "خلاصة لنتائج البحث"
 
-# حفظ ملف RSS
-tree = ET.ElementTree(rss)
-tree.write("search_rss.xml", encoding="utf-8", xml_declaration=True)
+    # تعبير منتظم لتصفية النتائج (مثال)
+    pattern = r"Daredevil Born Again S01E04 1080p HEVC x265-MeGusta"
+
+    for result in results:
+        title_tag = result.find('h2')  # العنوان (اضبط حسب الموقع)
+        link_tag = result.find('a', href=re.compile(r'\.torrent$|^magnet:'))  # الرابط
+
+        if title_tag and re.search(pattern, title_tag.text, re.IGNORECASE):
+            item = ET.SubElement(channel, "item")
+            ET.SubElement(item, "title").text = title_tag.text.strip()
+            ET.SubElement(item, "link").text = link_tag['href'] if link_tag else url
+            ET.SubElement(item, "description").text = "رابط متاح"
+
+    # حفظ ملف RSS
+    tree = ET.ElementTree(rss)
+    tree.write("search_rss.xml", encoding="utf-8", xml_declaration=True)
+else:
+    print("لم يتم العثور على <div id='content'>")
