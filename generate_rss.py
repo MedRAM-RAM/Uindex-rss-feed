@@ -26,7 +26,7 @@ driver = webdriver.Chrome(options=chrome_options)
 
 # رابط البحث في eztvx.to
 search_query = search_params['show_name'].replace(" ", "+")
-url = f"https://eztvx.to/search/?q={search_query}"
+url = f"https://eztvx.to/search/{search_query}"
 driver.get(url)
 
 # انتظر تحميل المحتوى
